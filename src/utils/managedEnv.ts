@@ -9,6 +9,7 @@ import {
 import { clearMTLSCache } from './mtls.js'
 import { clearProxyCache, configureGlobalAgents } from './proxy.js'
 import { isSettingSourceEnabled } from './settings/constants.js'
+import { applyMinimaxCompatEnv } from './minimaxCompat.js'
 import {
   getSettings_DEPRECATED,
   getSettingsForSource,
@@ -175,6 +176,8 @@ export function applySafeConfigEnvironmentVariables(): void {
       process.env[key] = value
     }
   }
+
+  applyMinimaxCompatEnv()
 }
 
 /**
@@ -188,6 +191,8 @@ export function applyConfigEnvironmentVariables(): void {
   Object.assign(process.env, filterSettingsEnv(getGlobalConfig().env))
 
   Object.assign(process.env, filterSettingsEnv(getSettings_DEPRECATED()?.env))
+
+  applyMinimaxCompatEnv()
 
   // Clear caches so agents are rebuilt with the new env vars
   clearCACertsCache()

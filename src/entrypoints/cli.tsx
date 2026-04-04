@@ -1,8 +1,12 @@
 import { feature } from 'bun:bundle';
+import { applyMinimaxCompatEnv } from '../utils/minimaxCompat.js';
 
 // Bugfix for corepack auto-pinning, which adds yarnpkg to peoples' package.jsons
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 process.env.COREPACK_ENABLE_AUTO_PIN = '0';
+
+// Allow MINIMAX_* credentials to flow through the Anthropic-compatible path.
+applyMinimaxCompatEnv();
 
 // Set max heap size for child processes in CCR environments (containers have 16GB)
 // eslint-disable-next-line custom-rules/no-top-level-side-effects, custom-rules/no-process-env-top-level, custom-rules/safe-env-boolean-check
@@ -37,7 +41,7 @@ async function main(): Promise<void> {
   if (args.length === 1 && (args[0] === '--version' || args[0] === '-v' || args[0] === '-V')) {
     // MACRO.VERSION is inlined at build time
     // biome-ignore lint/suspicious/noConsole:: intentional console output
-    console.log(`${MACRO.VERSION} (Claude Code)`);
+    console.log(`${MACRO.VERSION} (MyCloud)`);
     return;
   }
 

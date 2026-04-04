@@ -1,4 +1,4 @@
-# Claude Code 源码编译运行指南
+# MyCloud 源码编译运行指南
 
 ## 环境要求
 
@@ -13,40 +13,53 @@
 bun install
 ```
 
+如果当前环境里 `bun install` 因证书链或公司网络策略失败，可以先用下面这条兜底：
+
+```bash
+npm install
+```
+
 ### 2. 编译
 
 ```bash
 bun run build
 ```
 
-编译成功后会在根目录生成 `cli.js`（约 22MB）。
+编译成功后会在根目录生成 `mycloud.js`。
 
 ### 3. 运行
 
 ```bash
-# 设置 API Key
-export ANTHROPIC_API_KEY=your_api_key_here
+# 方式 A: 直接用 Anthropic-compatible 配置
+export ANTHROPIC_BASE_URL=https://your-compatible-endpoint.example.com
+export ANTHROPIC_AUTH_TOKEN=your_token_here
+export ANTHROPIC_MODEL=claude-sonnet-4-5
+
+# 方式 B: 直接用 Minimax 变量，MyCloud 会自动桥接到 Anthropic-compatible 路径
+export MINIMAX_BASE_URL=https://api.minimax.chat
+export MINIMAX_API_KEY=your_minimax_key
+export MINIMAX_MODEL=MiniMax-M1
 
 # 启动交互界面
-bun cli.js
+bun mycloud.js
 
 # 或直接传入 prompt（非交互模式）
-bun cli.js -p "你好"
+bun mycloud.js -p "你好"
 ```
 
 ### 常用命令
 
 ```bash
-bun cli.js --version       # 查看版本
-bun cli.js --help          # 查看帮助
-bun cli.js --model <model> # 指定模型
+bun mycloud.js --version       # 查看版本
+bun mycloud.js --help          # 查看帮助
+bun mycloud.js --model <model> # 指定模型
 ```
 
 ---
 
 ## 项目说明
 
-本项目为 `@anthropic-ai/claude-code v2.1.88` 源码，使用 **Bun** 作为构建工具，基于 TypeScript + React (Ink) 构建的终端 AI 编程助手。
+本项目当前以 `MyCloud` 的名字构建，底层仍基于 `@anthropic-ai/claude-code v2.1.88` 这一版源码，使用 **Bun** 作为构建工具，基于 TypeScript + React (Ink) 构建的终端 AI 编程助手。
 
 ### 技术栈
 
@@ -66,7 +79,7 @@ bun cli.js --model <model> # 指定模型
 ### 编译命令（完整）
 
 ```bash
-bun build src/entrypoints/cli.tsx --outfile cli.js --target bun \
+bun build src/entrypoints/cli.tsx --outfile mycloud.js --target bun \
   --define 'MACRO.VERSION="2.1.88"' \
   --define 'MACRO.BUILD_TIME="2025-01-01T00:00:00Z"' \
   --define 'MACRO.FEEDBACK_CHANNEL="https://github.com/anthropics/claude-code/issues"' \
@@ -112,13 +125,38 @@ alias = { "src" = "./src", "react/compiler-runtime" = "react-compiler-runtime" }
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-xxxx
-bun cli.js
+bun mycloud.js
 ```
+
+### 方式一补充：Anthropic-compatible / Minimax 桥接
+
+`MyCloud` 没有单独新增一套 Minimax provider 代码，而是直接复用现有的 Anthropic-compatible 调用链：
+
+- `ANTHROPIC_BASE_URL`
+- `ANTHROPIC_AUTH_TOKEN`
+- `ANTHROPIC_MODEL`
+
+如果你只提供 `MINIMAX_*` 变量，启动时会自动桥接成上面这套变量：
+
+```bash
+export MINIMAX_BASE_URL=https://api.minimax.chat
+export MINIMAX_API_KEY=your_minimax_key
+export MINIMAX_MODEL=MiniMax-M1
+bun mycloud.js
+```
+
+当前这台机器上，`~/.claude/settings.json` 已经存在可用的：
+
+- `ANTHROPIC_BASE_URL`
+- `ANTHROPIC_AUTH_TOKEN`
+- `ANTHROPIC_MODEL`
+
+所以在这台机器上直接运行 `bun mycloud.js` 就能沿用现有 Anthropic-compatible 配置，不需要额外手工导出。
 
 ### 方式二：OAuth 登录
 
 ```bash
-bun cli.js
+bun mycloud.js
 # 启动后在界面中选择登录，走 claude.ai 授权流程
 ```
 
@@ -128,14 +166,14 @@ bun cli.js
 export AWS_ACCESS_KEY_ID=xxx
 export AWS_SECRET_ACCESS_KEY=xxx
 export AWS_REGION=us-east-1
-bun cli.js --model anthropic.claude-3-5-sonnet-20241022-v2:0
+bun mycloud.js --model anthropic.claude-3-5-sonnet-20241022-v2:0
 ```
 
 ---
 
 ## 修改源码后如何验证
 
-仓库中已包含编译好的 `cli.js`，可以直接 `bun cli.js` 运行，**不需要重新编译**。
+编译成功后会在本地生成 `mycloud.js`，可以直接 `bun mycloud.js` 运行。
 
 如果你修改了源码想验证效果，流程如下：
 
@@ -146,7 +184,7 @@ bun cli.js --model anthropic.claude-3-5-sonnet-20241022-v2:0
 bun run build
 
 # 3. 运行验证
-bun cli.js
+bun mycloud.js
 ```
 
 **注意**：以下模块涉及 Anthropic 内部私有包，修改后无法编译：
